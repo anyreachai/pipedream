@@ -41,20 +41,23 @@ jobs:
         run: |
           # Create the directory the CLI actually reads
           mkdir -p "$XDG_CONFIG_HOME/pipedream"                  
-
           
           # Write both api_key AND org_id from your secrets
           cat <<EOF > "$XDG_CONFIG_HOME/pipedream/config"
           [workspace]
           api_key = $PIPEDREAM_API_KEY
           org_id = $PIPEDREAM_ORG_ID
-          EOF                
+          EOF
+
+          # Verify the config was written correctly
+          echo "=== Config file written ==="
+          ls -la "$XDG_CONFIG_HOME/pipedream/"
 
       - name: Verify Authentication
         run: |
           # Test authentication without interactive prompts
           # Set timeout to prevent hanging and capture output
-          timeout 30s pd list components --profile workspace || {
+          timeout 10s pd list components --profile workspace || {
             echo "❌ Authentication failed!"
             echo "The Pipedream CLI could not authenticate with the provided credentials."
             echo "Please check that PIPEDREAM_API_KEY and PIPEDREAM_ORG_ID are correctly set in the repository secrets/variables."
