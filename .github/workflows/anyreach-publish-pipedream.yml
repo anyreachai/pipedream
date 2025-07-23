@@ -35,15 +35,15 @@ jobs:
       - name: Configure Pipedream CLI Profile
         env:
           PIPEDREAM_API_KEY: ${{ secrets.PIPEDREAM_API_KEY }}
-          PIPEDREAM_ORG_ID:  ${{ secrets.PIPEDREAM_ORG_ID }}
+          PIPEDREAM_ORG_ID:  ${{ vars.PIPEDREAM_ORG_ID }}
         run: |
           # Create the directory the CLI actually reads
           mkdir -p "$XDG_CONFIG_HOME/pipedream"
           # Write both api_key AND org_id from your secrets
           cat <<EOF > "$XDG_CONFIG_HOME/pipedream/config"
           [workspace]
-          api_key = $PIPEDREAM_API_KEY
-          org_id  = $PIPEDREAM_ORG_ID
+          api_key = ${{ secrets.PIPEDREAM_API_KEY }}
+          org_id  = ${{ vars.PIPEDREAM_ORG_ID }}  
           EOF
 
       - name: Show & Verify Pipedream config
