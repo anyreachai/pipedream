@@ -15,6 +15,7 @@ jobs:
   publish-actions:
     runs-on: ubuntu-latest
     environment: ${{ github.event.pull_request.base.ref == 'main' && github.event.pull_request.merged == true && 'prod' || 'dev' }} 
+
     # Only run on merge events or PR validation (not closed without merge)
     if: github.event.action != 'closed' || github.event.pull_request.merged == true
     # Tell the CLI exactly where to find your config
@@ -40,6 +41,7 @@ jobs:
         run: |
           # Create the directory the CLI actually reads
           mkdir -p "$XDG_CONFIG_HOME/pipedream"                  
+
           
           # Write both api_key AND org_id from your secrets
           cat <<EOF > "$XDG_CONFIG_HOME/pipedream/config"
@@ -63,7 +65,7 @@ jobs:
           }
           echo "✅ Authentication successful"
 
-      - name: Diff & Process Components
+      - name: Identify New Actions And Publish
         env:
           PROFILE: workspace
           # Dry‐run on PRs that haven't merged yet
