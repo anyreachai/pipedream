@@ -28,15 +28,6 @@ while [[ $# -gt 0 ]]; do
 done
 [[ -n "$BASE" && -n "$HEAD" ]] || usage
 
-# Print arguments for debugging
-echo "=== Script Arguments ==="
-echo "BASE: $BASE"
-echo "HEAD: $HEAD"
-echo "DRY_RUN: $DRY_RUN"
-echo "PROFILE: $PROFILE"
-echo "========================"
-echo
-
 # Check if base and head are the same commit
 BASE_HASH=$(git rev-parse "$BASE")
 HEAD_HASH=$(git rev-parse "$HEAD")
