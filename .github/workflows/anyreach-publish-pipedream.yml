@@ -5,7 +5,7 @@ on:
   pull_request:
     types:
       - opened
-      - synchronize 
+      - synchronize
       - reopened
       - closed
     branches:
@@ -17,6 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     # Only run on merge events or PR validation (not closed without merge)
     if: github.event.action != 'closed' || github.event.pull_request.merged == true
+    # Tell the CLI exactly where to find your config
+    env:
+      XDG_CONFIG_HOME: ${{ github.workspace }}/.config
+
     steps:
       - name: Checkout all history
         uses: actions/checkout@v3
@@ -25,18 +29,33 @@ jobs:
 
       - name: Install Pipedream CLI
         run: |
-          curl https://cli.pipedream.com/install | sh
-          echo "$HOME/.pipedream/bin" >> $GITHUB_PATH
+          curl https://cli.pipedream.com/install | sh    # :contentReference[oaicite:0]{index=0}
+          echo "$HOME/.pipedream/bin" >> "$GITHUB_PATH"
 
       - name: Configure Pipedream CLI Profile
         env:
           PIPEDREAM_API_KEY: ${{ secrets.PIPEDREAM_API_KEY }}
-          PIPEDREAM_ORG_ID:  ${{ vars.PIPEDREAM_ORG_ID }}
+          PIPEDREAM_ORG_ID:  ${{ secrets.PIPEDREAM_ORG_ID }}
         run: |
-          mkdir -p ~/.config/pipedream
-          printf "[workspace]\napi_key = %s\norg_id = %s\n" \
-            "$PIPEDREAM_API_KEY" "$PIPEDREAM_ORG_ID" \
-          > ~/.config/pipedream/config
+          # Create the directory the CLI actually reads
+          mkdir -p "$XDG_CONFIG_HOME/pipedream"
+          # Write both api_key AND org_id from your secrets
+          cat <<EOF > "$XDG_CONFIG_HOME/pipedream/config"
+          [workspace]
+          api_key = $PIPEDREAM_API_KEY
+          org_id  = $PIPEDREAM_ORG_ID
+          EOF
+
+      - name: Show & Verify Pipedream config
+        run: |
+          echo "--- Config file ($XDG_CONFIG_HOME/pipedream/config) ---"
+          cat "$XDG_CONFIG_HOME/pipedream/config"
+          echo "-----------------------------------------------"
+
+      - name: Verify authentication
+        run: |
+          # This will 404 if your API key or org_id aren't loaded properly
+          pd list components --profile workspace --limit 1    # :contentReference[oaicite:1]{index=1}
 
       - name: Show Event Info
         run: |
@@ -49,7 +68,7 @@ jobs:
       - name: Diff & Process Components
         env:
           PROFILE: workspace
-          # Only run actual publish/unpublish on merged PRs, dry-run for validation
+          # Dry‐run on PRs that haven't merged yet
           DRY_RUN: ${{ github.event.action != 'closed' || github.event.pull_request.merged != true }}
           BASE_REF: ${{ github.event.pull_request.base.sha }}
           HEAD_REF: ${{ github.event.pull_request.head.sha }}
