@@ -47,11 +47,7 @@ jobs:
           [workspace]
           api_key = $PIPEDREAM_API_KEY
           org_id = $PIPEDREAM_ORG_ID
-          EOF
-
-          # Verify the config was written correctly
-          echo "=== Config file written ==="
-          ls -la "$XDG_CONFIG_HOME/pipedream/"
+          EOF          
 
       - name: Verify Authentication
         run: |
