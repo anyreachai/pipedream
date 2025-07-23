@@ -55,7 +55,7 @@ jobs:
       - name: Verify authentication
         run: |
           # This will 404 if your API key or org_id aren't loaded properly
-          pd list components --profile workspace --limit 1    # :contentReference[oaicite:1]{index=1}
+          pd list components --profile workspace
 
       - name: Show Event Info
         run: |
