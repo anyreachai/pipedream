@@ -1,0 +1,95 @@
+# .github/workflows/pipedream-ci.yml
+name: Pipedream CI/CD
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+    branches:
+      - main
+      - research
+
+jobs:
+  handle-components:
+    runs-on: ubuntu-latest
+    # Only run on merge events or PR validation (not closed without merge)
+    if: github.event.action != 'closed' || github.event.pull_request.merged == true
+    # Tell the CLI exactly where to find your config
+    env:
+      XDG_CONFIG_HOME: ${{ github.workspace }}/.config
+      PIPEDREAM_API_KEY: ${{ secrets.PIPEDREAM_API_KEY }}
+      PIPEDREAM_ORG_ID: ${{ vars.PIPEDREAM_ORG_ID }}
+
+    steps:
+      - name: Checkout all history
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Pipedream CLI
+        run: |
+          curl https://cli.pipedream.com/install | sh    # :contentReference[oaicite:0]{index=0}
+          echo "$HOME/.pipedream/bin" >> "$GITHUB_PATH"
+
+      - name: Configure Pipedream CLI Profile
+        run: |
+          # Create the directory the CLI actually reads
+          mkdir -p "$XDG_CONFIG_HOME/pipedream"
+          
+          # Debug environment variables before writing config
+          echo "=== Debug: Environment Variables ==="
+          echo "PIPEDREAM_API_KEY is set: $([[ -n "$PIPEDREAM_API_KEY" ]] && echo "YES (length: ${#PIPEDREAM_API_KEY})" || echo "NO")"
+          echo "PIPEDREAM_ORG_ID is set: $([[ -n "$PIPEDREAM_ORG_ID" ]] && echo "YES ($PIPEDREAM_ORG_ID)" || echo "NO")"
+          
+          # Write both api_key AND org_id from your secrets
+          cat <<EOF > "$XDG_CONFIG_HOME/pipedream/config"
+          [workspace]
+          api_key = $PIPEDREAM_API_KEY
+          org_id = $PIPEDREAM_ORG_ID
+          EOF
+          
+          # Verify the config was written correctly
+          echo "=== Config file written ==="
+          ls -la "$XDG_CONFIG_HOME/pipedream/"
+
+      - name: Show & Verify Pipedream config
+        run: |
+          echo "--- Config file ($XDG_CONFIG_HOME/pipedream/config) ---"
+          cat "$XDG_CONFIG_HOME/pipedream/config"
+          echo "-----------------------------------------------"
+          echo "Environment variables check:"
+          echo "PIPEDREAM_API_KEY is set: $([[ -n "$PIPEDREAM_API_KEY" ]] && echo "YES" || echo "NO")"
+          echo "PIPEDREAM_ORG_ID is set: $([[ -n "$PIPEDREAM_ORG_ID" ]] && echo "YES" || echo "NO")"
+          echo "PIPEDREAM_API_KEY length: ${#PIPEDREAM_API_KEY}"
+          echo "PIPEDREAM_ORG_ID value: $PIPEDREAM_ORG_ID"
+          echo "PIPEDREAM_API_KEY value: ${{ secrets.PIPEDREAM_API_KEY }}"
+
+      - name: Verify authentication
+        run: |
+          # This will 404 if your API key or org_id aren't loaded properly
+          pd list components --profile workspace
+
+      - name: Show Event Info
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Action: ${{ github.event.action }}"
+          echo "Merged: ${{ github.event.pull_request.merged }}"
+          echo "Base branch: ${{ github.event.pull_request.base.ref }}"
+          echo "Head branch: ${{ github.event.pull_request.head.ref }}"
+
+      - name: Diff & Process Components
+        env:
+          PROFILE: workspace
+          # Dry‐run on PRs that haven't merged yet
+          DRY_RUN: ${{ github.event.action != 'closed' || github.event.pull_request.merged != true }}
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.sha }}
+        run: |
+          chmod +x scripts/anyreach-pd-change-handler.sh
+          ./scripts/anyreach-pd-change-handler.sh \
+            --base "${BASE_REF}" \
+            --head "${HEAD_REF}" \
+            $( [[ "$DRY_RUN" == 'true' ]] && echo "--dry-run" )
