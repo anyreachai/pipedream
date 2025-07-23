@@ -4,8 +4,8 @@ export default {
     ...common,
     key: "highlevel_oauth-get-free-slots",
     name: "Get Free Slots",
-    description: "Retrieves available time slots from a calendar. [See the documentation](https://highlevel.stoplight.io/docs/integrations/7f694ee8bd969-get-free-slots)",
-    version: "0.0.39",
+    description: "Retrieves available time slots from a calendar [See the documentation](https://highlevel.stoplight.io/docs/integrations/7f694ee8bd969-get-free-slots)",
+    version: "0.0.40",
     type: "action",
     props: {
         ...common.props,
