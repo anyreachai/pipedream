@@ -1,33 +1,14 @@
-import common from "../../common/base.mjs";
+import common from "../common/common-calendar.mjs";
 
 export default {
     ...common,
-    key: "highlevel_oauth-get-free-slots",
+    key: "highlevel_oauth-get-calendar-free-slots",
     name: "Get Free Slots",
     description: "Retrieves available time slots from a calendar [See the documentation](https://highlevel.stoplight.io/docs/integrations/7f694ee8bd969-get-free-slots)",
-    version: "0.0.1",
+    version: "0.0.2",
     type: "action",
     props: {
-        ...common.props,
-        calendarId: {
-            type: "string",
-            label: "Calendar ID",
-            description: "The ID of the calendar to retrieve free slots from",
-            async options() {
-                const { calendars } = await this.app._makeRequest({
-                    url: "/calendars/",
-                    params: {
-                        locationId: this.app?.getLocationId(),
-                    },
-                });
-                return calendars?.map(({
-                    id: value, name: label,
-                }) => ({
-                    label,
-                    value,
-                })) || [];
-            },
-        },
+        ...common.props,        
         startDate: {
             type: "string",
             label: "Start Date",

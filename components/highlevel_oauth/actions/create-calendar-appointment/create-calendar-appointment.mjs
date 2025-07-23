@@ -1,4 +1,4 @@
-import common from "../../common/base.mjs";
+import common from "../common/common-calendar.mjs";
 
 export default {
   ...common,
@@ -9,30 +9,6 @@ export default {
   type: "action",
   props: {
     ...common.props,
-    title: {
-      type: "string",
-      label: "Title",
-      description: "The title of the appointment",
-    },
-    calendarId: {
-      type: "string",
-      label: "Calendar ID",
-      description: "The ID of the calendar",
-      async options() {
-        const calendars = await this.app._makeRequest({
-          url: "/calendars/",
-          params: {
-            locationId: this.app.getLocationId(),
-          },
-        });
-        return calendars?.calendars
-          ?.filter(calendar => calendar.isActive)
-          .map(({ id: value, name: label }) => ({
-            label,
-            value,
-          })) || [];
-      },
-    },
     contactId: {
       type: "string",
       label: "Contact ID",
@@ -63,18 +39,22 @@ export default {
       description: "End date and time in the format of example: '2021-06-23T03:30:00+05:30'",
       optional: true,
     },
+    title: {
+      type: "string",
+      label: "Title",
+      description: "The title of the appointment",
+    },
     meetingLocationType: {
       type: "string",
       label: "Meeting Location Type",
-      description: "Type of meeting location (e.g., default, custom)",
+      description: "Meeting location type.",
       options: ["custom", "zoom", "gmeet", "phone", "address", "ms_teams", "google"],
-      default: "custom",
       optional: true,
     },
     meetingLocationId: {
       type: "string",
       label: "Meeting Location ID",
-      description: "The ID of the meeting location",
+      description: "The unique identifier for the meeting location.",
       optional: true,
       async options() {
         if (!this.calendarId) {
@@ -136,7 +116,7 @@ export default {
         });
         return users?.map(({ id, email }) => ({
           label: email,
-          value: id.toString(), 
+          value: id.toString(),
         })) || [];
       },
     },
@@ -164,20 +144,25 @@ export default {
       description: "If true the time slot validation would be avoided for any appointment creation (even the date range)",
       optional: true,
     },
-
+    rrule: {
+      type: "string",
+      label: "RRule",
+      description: "RRULE as per the iCalendar (RFC 5545) specification for recurring events. DTSTART is not required, instance ids are calculated on the basis of startTime of the event. The rrule only be applied if ignoreFreeSlotValidation is true.",
+      optional: true,
+    }
   },
-  async run({ $ }) {    
+  async run({ $ }) {
     const { app, ...props } = this;
     $.export("props", props);
 
     try {
       // Create the calendar appointment
       const response = await this.app.createCalendarAppointment({
-        $,        
-        data: {...props,locationId: this.app.getLocationId()},
+        $,
+        data: { ...props, locationId: this.app.getLocationId() },
       });
 
-      
+
 
       $.export("$summary", `Successfully created calendar appointment`);
 
@@ -190,7 +175,7 @@ export default {
 
       // Log the full error for debugging
       console.error("Calendar appointment creation error:", {
-        error: error.message,        
+        error: error.message,
         stack: error.stack,
       });
 
