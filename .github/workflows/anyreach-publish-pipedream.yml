@@ -34,16 +34,16 @@ jobs:
 
       - name: Configure Pipedream CLI Profile
         env:
-          PIPEDREAM_API_KEY: o_MMIMd7V
-          PIPEDREAM_ORG_ID:  8fed3d20d38a3fc5da2d3b72d3d7b29e
+          PIPEDREAM_API_KEY: 8fed3d20d38a3fc5da2d3b72d3d7b29e
+          PIPEDREAM_ORG_ID:  o_MMIMd7V
         run: |
           # Create the directory the CLI actually reads
           mkdir -p "$XDG_CONFIG_HOME/pipedream"
           # Write both api_key AND org_id from your secrets
           cat <<EOF > "$XDG_CONFIG_HOME/pipedream/config"
           [workspace]
-          api_key = o_MMIMd7V
-          org_id  = 8fed3d20d38a3fc5da2d3b72d3d7b29e
+          api_key = 8fed3d20d38a3fc5da2d3b72d3d7b29e
+          org_id  = o_MMIMd7V
           EOF
 
       - name: Show & Verify Pipedream config
