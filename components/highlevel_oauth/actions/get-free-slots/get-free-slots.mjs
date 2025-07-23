@@ -14,13 +14,13 @@ export default {
             label: "Calendar ID",
             description: "The ID of the calendar to retrieve free slots from",
             async options() {
-                const {calendars} = await this.app._makeRequest({
+                const { calendars } = await this.app._makeRequest({
                     url: "/calendars/",
                     params: {
-                        locationId: this.app.getLocationId(),
+                        locationId: this.app?.getLocationId(),
                     },
                 });
-                return calendars?.calendars?.map(({
+                return calendars?.map(({
                     id: value, name: label,
                 }) => ({
                     label,
@@ -37,6 +37,48 @@ export default {
             type: "string",
             label: "End Date",
             description: "The end date for slot lookup in YYYY-MM-DD format (e.g., 2024-01-16)",
+        },
+        userId: {
+            type: "string",
+            label: "User ID",
+            description: "The user for whom the free slots are returned",
+            optional: true,
+            async options() {
+
+                const users = await this.app._makeRequest({
+                    url: "/users/",
+                    params: {
+                        locationId: this.app.getLocationId(),
+                    },
+                });
+                return users?.users?.map(({
+                    id: value, name: label,
+                }) => ({
+                    label,
+                    value,
+                })) || [];
+            },
+
+        },
+        userIds: {
+            type: "string[]",
+            label: "User IDs",
+            description: "The users for whom the free slots are returned",
+            optional: true,
+            async options() {
+                const users = await this.app._makeRequest({
+                    url: "/users/",
+                    params: {
+                        locationId: this.app.getLocationId(),
+                    },
+                });
+                return users?.users?.map(({
+                    id: value, name: label,
+                }) => ({
+                    label,
+                    value,
+                })) || [];
+            }
         },
         timezone: {
             type: "string",
@@ -66,26 +108,6 @@ export default {
                 "UTC",
             ],
         },
-        userId: {
-            type: "string",
-            label: "User ID",
-            description: "The ID of the user whose calendar to check",
-            optional: true,
-            async options() {
-                const users = await this.app._makeRequest({
-                    url: "/users/",
-                    params: {
-                        locationId: this.app.getLocationId(),
-                    },
-                });
-                return users?.users?.map(({
-                    id: value, name: label,
-                }) => ({
-                    label,
-                    value,
-                })) || [];
-            }
-        },
     },
     async run({ $ }) {
         const {
@@ -96,9 +118,6 @@ export default {
             timezone,
             userId,
         } = this;
-
-        console.log("startDate", startDate, new Date(startDate).getTime());
-        console.log("endDate", endDate, new Date(endDate).getTime());
         const args = {
             startDate: startDate ? new Date(startDate).getTime() : undefined,
             endDate: endDate ? new Date(endDate).getTime() : undefined,
@@ -112,7 +131,13 @@ export default {
             params: args,
         });
 
-        const slotsCount = response.slots?.length || 0;
+        let slotsCount = 0;
+        for (const date of Object.keys(response)) {
+            const slots = response[date].slots
+            if (slots) {
+                slotsCount += slots.length;
+            }
+        }
         $.export("$summary", `Successfully retrieved ${slotsCount} free slots from calendar ${calendarId}`);
 
         return response;
