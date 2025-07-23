@@ -58,6 +58,15 @@ for entry in "${changes[@]}"; do
   path="${entry#*|}"        # filepath
   filename="$(basename "$path")"
   key="${filename%.*}"      # strip extension for component key
+  
+  # Get the parent directory name
+  parent_dir="$(basename "$(dirname "$path")")"
+  
+  # Only process files where folder name matches filename (without extension)
+  if [[ "$parent_dir" != "$key" ]]; then
+    echo "- $path → skipped (folder '$parent_dir' doesn't match file '$key')"
+    continue
+  fi
 
   # Determine what to do:
   # Always publish on add/modify, no unpublish logic
