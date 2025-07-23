@@ -69,17 +69,10 @@ for entry in "${changes[@]}"; do
   key="${filename%.*}"      # strip extension for component key
 
   # Determine what to do:
+  # Always publish on add/modify, no unpublish logic
   if [[ "$status" == "D" ]]; then
-    action="unpublish"
-  elif [[ "$filename" == *-unpublished.* ]]; then
-    # files ending in -unpublished.mjs
-    if [[ "$status" == "M" ]]; then
-      action="unpublish"
-    else
-      action="noaction"
-    fi
+    action="noaction"
   else
-    # additions or modifications without suffix
     action="publish"
   fi
 
@@ -89,10 +82,7 @@ for entry in "${changes[@]}"; do
   if ! $DRY_RUN; then
     case "$action" in
       publish)
-        pd publish "$path" --profile "$PROFILE"    # :contentReference[oaicite:0]{index=0}
-        ;;
-      unpublish)
-        pd unpublish component "$key" --profile "$PROFILE"    # :contentReference[oaicite:1]{index=1}
+        pd publish "$path" --profile "$PROFILE"
         ;;
       noaction)
         ;;
