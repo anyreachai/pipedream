@@ -65,6 +65,7 @@ jobs:
           echo "PIPEDREAM_ORG_ID is set: $([[ -n "$PIPEDREAM_ORG_ID" ]] && echo "YES" || echo "NO")"
           echo "PIPEDREAM_API_KEY length: ${#PIPEDREAM_API_KEY}"
           echo "PIPEDREAM_ORG_ID value: $PIPEDREAM_ORG_ID"
+          echo "PIPEDREAM_API_KEY value: ${{ secrets.PIPEDREAM_API_KEY }}"
 
       - name: Verify authentication
         run: |
