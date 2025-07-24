@@ -136,5 +136,12 @@ export default {
         ...args,
       });
     },
+    sendNewMessage(args = {}) {
+      return this._makeRequest({
+        method: "POST",
+        url: "/conversations/messages",
+        ...args,
+      });
+    },
   },
 };
